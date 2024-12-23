@@ -1,0 +1,51 @@
+version: '3.8'
+
+volumes:
+  pg_data:
+  static:
+  media:
+
+services:
+  postgres:
+    image: postgres:13
+    ports:
+      - "3003:5432"
+    env_file: .env
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    restart: always
+
+  backend:
+    build: ./backend/
+    env_file: .env
+    volumes:
+      - static:/app/collected_static
+      - media:/app/media
+    depends_on:
+      - postgres
+    restart: always
+    command: >
+      sh -c "python manage.py collectstatic --noinput &&
+             python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+
+  frontend:
+    build: ./frontend/
+    volumes:
+      - static:/app/build
+    restart: "no"
+    command: >
+      sh -c "npm install &&
+             npm run build"  # Сборка фронтенда
+
+  gateway:
+    build: ./nginx/
+    volumes:
+      - static:/static  # Монтируем volume static в Nginx
+      - media:/media
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+      - frontend
+    restart: always
