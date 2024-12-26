@@ -165,19 +165,37 @@ jobs:
         run: |
           pytest tests/ --maxfail=5 --disable-warnings
 
-  send_message:
-    name: Send Telegram Notification
+notify_on_success:
+    name: Notify on Success
     needs: run_tests
+    if: success()
     runs-on: ubuntu-latest
 
     steps:
-      - name: Send message
+      - name: Send success message
         uses: appleboy/telegram-action@master
         with:
           to: ${{ secrets.TELEGRAM_TO }}
           token: ${{ secrets.TELEGRAM_TOKEN }}
           message: |
-            🎉 Деплой успешно завершён!
-            🔗 [Коммит]({{ github.event.head_commit.url }})
-            🧑 Автор: ${{ github.actor }}
-            📝 Сообщение: ${{ github.event.head_commit.message }}
+            ✅ Deployment of the project ${{ github.repository }} was successful!
+            🧑 Author: ${{ github.actor }}
+            📝 Commit message: ${{ github.event.head_commit.message }}
+            🔗 [Commit link](https://github.com/${{ github.repository }}/commit/${{ github.sha }})
+
+  notify_on_failure:
+    name: Notify on Failure
+    if: failure()
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Send failure message
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          message: |
+            ❌ Deployment of the project ${{ github.repository }} failed!
+            🧑 Author: ${{ github.actor }}
+            📝 Commit message: ${{ github.event.commits[0].message }}
+            🔗 [Commit link](https://github.com/${{ github.repository }}/commit/${{ github.sha }})
