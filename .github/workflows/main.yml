@@ -39,7 +39,11 @@ jobs:
     strategy:
       matrix:
         context: ["./backend", "./frontend", "./nginx"]
-        tags: ["kittygram_backend", "kittygram_frontend", "kittygram_gateway"]
+        tags: [
+          "${{ secrets.DOCKER_USERNAME }}/kittygram_backend:latest",
+          "${{ secrets.DOCKER_USERNAME }}/kittygram_frontend:latest",
+          "${{ secrets.DOCKER_USERNAME }}/kittygram_gateway:latest"
+        ]
 
     steps:
       - name: Check out the repository
@@ -54,18 +58,17 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build and push image
+      - name: Build and push Docker image
         uses: docker/build-push-action@v4
         with:
           context: ${{ matrix.context }}
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/{{ matrix.tags }}:latest
+          tags: ${{ matrix.tags }}
 
   deploy:
     name: Deploy to Production
     needs: build_and_push
     runs-on: ubuntu-latest
-    timeout-minutes: 10
 
     steps:
       - name: Checkout repo
@@ -119,22 +122,22 @@ jobs:
           pytest tests/ --maxfail=5 --disable-warnings
 
   notify_on_success:
-      name: Notify on Success
-      needs: run_tests
-      if: success()
-      runs-on: ubuntu-latest
+    name: Notify on Success
+    needs: run_tests
+    if: success()
+    runs-on: ubuntu-latest
 
-      steps:
-        - name: Send success message
-          uses: appleboy/telegram-action@master
-          with:
-            to: ${{ secrets.TELEGRAM_TO }}
-            token: ${{ secrets.TELEGRAM_TOKEN }}
-            message: |
-              ✅ Deployment of the project ${{ github.repository }} was successful!
-              🧑 Author: ${{ github.actor }}
-              📝 Commit message: ${{ github.event.head_commit.message }}
-              🔗 [Commit link](https://github.com/${{ github.repository }}/commit/${{ github.sha }})
+    steps:
+      - name: Send success message
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          message: |
+            ✅ Deployment of the project ${{ github.repository }} was successful!
+            🧑 Author: ${{ github.actor }}
+            📝 Commit message: ${{ github.event.commits[0].message }}
+            🔗 [Commit link](https://github.com/${{ github.repository }}/commit/${{ github.sha }})
   notify_on_failure:
     name: Notify on Failure
     if: failure()
