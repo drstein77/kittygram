@@ -165,24 +165,23 @@ jobs:
         run: |
           pytest tests/ --maxfail=5 --disable-warnings
 
-notify_on_success:
-    name: Notify on Success
-    needs: run_tests
-    if: success()
-    runs-on: ubuntu-latest
+  notify_on_success:
+      name: Notify on Success
+      needs: run_tests
+      if: success()
+      runs-on: ubuntu-latest
 
-    steps:
-      - name: Send success message
-        uses: appleboy/telegram-action@master
-        with:
-          to: ${{ secrets.TELEGRAM_TO }}
-          token: ${{ secrets.TELEGRAM_TOKEN }}
-          message: |
-            ✅ Deployment of the project ${{ github.repository }} was successful!
-            🧑 Author: ${{ github.actor }}
-            📝 Commit message: ${{ github.event.head_commit.message }}
-            🔗 [Commit link](https://github.com/${{ github.repository }}/commit/${{ github.sha }})
-
+      steps:
+        - name: Send success message
+          uses: appleboy/telegram-action@master
+          with:
+            to: ${{ secrets.TELEGRAM_TO }}
+            token: ${{ secrets.TELEGRAM_TOKEN }}
+            message: |
+              ✅ Deployment of the project ${{ github.repository }} was successful!
+              🧑 Author: ${{ github.actor }}
+              📝 Commit message: ${{ github.event.head_commit.message }}
+              🔗 [Commit link](https://github.com/${{ github.repository }}/commit/${{ github.sha }})
   notify_on_failure:
     name: Notify on Failure
     if: failure()
