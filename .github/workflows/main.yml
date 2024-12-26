@@ -38,12 +38,10 @@ jobs:
 
     strategy:
       matrix:
-        context: ["./backend", "./frontend", "./nginx"]
-        tags: [
-          "${{ secrets.DOCKER_USERNAME }}/kittygram_backend:latest",
-          "${{ secrets.DOCKER_USERNAME }}/kittygram_frontend:latest",
-          "${{ secrets.DOCKER_USERNAME }}/kittygram_gateway:latest"
-        ]
+        service:
+          - { context: ./backend, tag: kittygram_backend }
+          - { context: ./frontend, tag: kittygram_frontend }
+          - { context: ./nginx, tag: kittygram_gateway }
 
     steps:
       - name: Check out the repository
@@ -61,9 +59,9 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v4
         with:
-          context: ${{ matrix.context }}
+          context: ${{ matrix.service.context }}
           push: true
-          tags: ${{ matrix.tags }}
+          tags: ${{ secrets.DOCKER_USERNAME }}/${{ matrix.service.tag }}:latest
 
   deploy:
     name: Deploy to Production
