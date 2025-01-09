@@ -12,8 +12,6 @@ services:
     volumes:
       - pg_data:/var/lib/postgresql/data
     restart: always
-    networks:
-      - kittygram_network
 
   backend:
     image: wurt83ow/kittygram_backend:latest
@@ -25,8 +23,7 @@ services:
     depends_on:
       - postgres
     restart: always
-    networks:
-      - kittygram_network
+
     command: >
       sh -c "python manage.py collectstatic --noinput &&
              python manage.py migrate &&
@@ -38,8 +35,6 @@ services:
     volumes:
       - frontend_static:/app/build
     restart: always
-    networks:
-      - kittygram_network
 
   gateway:
     image: wurt83ow/kittygram_gateway:latest
@@ -54,9 +49,3 @@ services:
       - backend
       - frontend
     restart: always
-    networks:
-      - kittygram_network
-
-networks:
-  kittygram_network:
-    driver: bridge
