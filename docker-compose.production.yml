@@ -7,13 +7,17 @@ volumes:
 services:
   postgres:
     image: postgres:13
+    container_name: postgres
     env_file: .env
     volumes:
       - pg_data:/var/lib/postgresql/data
     restart: always
+    networks:
+      - kittygram_network
 
   backend:
     image: wurt83ow/kittygram_backend:latest
+    container_name: backend
     env_file: .env
     volumes:
       - backend_static:/app/collected_static
@@ -21,6 +25,8 @@ services:
     depends_on:
       - postgres
     restart: always
+    networks:
+      - kittygram_network
     command: >
       sh -c "python manage.py collectstatic --noinput &&
              python manage.py migrate &&
@@ -28,12 +34,16 @@ services:
 
   frontend:
     image: wurt83ow/kittygram_frontend:latest
+    container_name: frontend
     volumes:
       - frontend_static:/app/build
-    restart: "no"
+    restart: always
+    networks:
+      - kittygram_network
 
   gateway:
     image: wurt83ow/kittygram_gateway:latest
+    container_name: gateway
     volumes:
       - backend_static:/var/html/backend
       - frontend_static:/var/html/static
@@ -44,3 +54,9 @@ services:
       - backend
       - frontend
     restart: always
+    networks:
+      - kittygram_network
+
+networks:
+  kittygram_network:
+    driver: bridge
