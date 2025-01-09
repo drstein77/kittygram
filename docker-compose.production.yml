@@ -1,7 +1,7 @@
-
 volumes:
   pg_data:
-  static:
+  backend_static:
+  frontend_static:
   media:
 
 services:
@@ -16,7 +16,7 @@ services:
     image: wurt83ow/kittygram_backend:latest
     env_file: .env
     volumes:
-      - static:/app/collected_static
+      - backend_static:/app/collected_static
       - media:/app/media
     depends_on:
       - postgres
@@ -29,14 +29,15 @@ services:
   frontend:
     image: wurt83ow/kittygram_frontend:latest
     volumes:
-      - static:/app/build
+      - frontend_static:/app/build
     restart: "no"
 
   gateway:
     image: wurt83ow/kittygram_gateway:latest
     volumes:
-      - static:/static  # Монтируем volume static в Nginx
-      - media:/media
+      - backend_static:/var/html/backend
+      - frontend_static:/var/html/static
+      - media:/var/html/media
     ports:
       - "80:80"
     depends_on:
